@@ -3,12 +3,15 @@ package com.example.springboot_springsecurity_jwt.util;
 import com.example.springboot_springsecurity_jwt.service.RedisService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
+
+import java.security.Key;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
@@ -20,8 +23,8 @@ import java.util.concurrent.TimeUnit;
  * AccessToken 및 RefreshToken 생성
  * Redis를 사용한 RefreshToken 저장 및 조회
  */
-@RequiredArgsConstructor
 @Component
+@RequiredArgsConstructor
 public class TokenProvider {
 
     @Value("${jwt.issuer}")
@@ -38,9 +41,10 @@ public class TokenProvider {
     private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 10; // 10분
     private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24 * 30; // 30일
 
-    // AccessToken 생성 메서드
-    public String makeAccessToken(Long memberId) {
+    // 공통 JWT 빌더 메서드
+    private String createToken(Long memberId, String secretKey, long expireTime) {
         Date now = new Date();
+        Key key = Keys.hmacShaKeyFor(secretKey.getBytes());
         return Jwts.builder()
                 .header()
                 .add("typ", "JWT")
@@ -49,31 +53,21 @@ public class TokenProvider {
                 .issuer(issuer)
                 .subject(String.valueOf(memberId))
                 .issuedAt(now)
-                .expiration(new Date(now.getTime() + ACCESS_TOKEN_EXPIRE_TIME))
+                .expiration(new Date(now.getTime() + expireTime))
                 .claim("id", memberId)
-                .signWith(accessSecretKey)
+                .signWith(key)
                 .compact();
+    }
+
+    // AccessToken 생성 메서드
+    public String makeAccessToken(Long memberId) {
+        return createToken(memberId, accessSecretKey, ACCESS_TOKEN_EXPIRE_TIME);
     }
 
     // RefreshToken 생성 메서드
     public String makeRefreshToken(Long memberId) {
-        Date now = new Date();
-        String refreshToken = Jwts.builder()
-                .header()
-                .add("typ", "JWT")
-                .add("alg", "HS512")
-                .and()
-                .issuer(issuer)
-                .subject(String.valueOf(memberId))
-                .issuedAt(now)
-                .expiration(new Date(now.getTime() + REFRESH_TOKEN_EXPIRE_TIME))
-                .claim("id", memberId)
-                .signWith(refreshSecretKey)
-                .compact();
-
-        // Redis에 저장 (만료 시간 설정)
+        String refreshToken = createToken(memberId, refreshSecretKey, REFRESH_TOKEN_EXPIRE_TIME);
         redisService.saveValue("RT:" + memberId, refreshToken, REFRESH_TOKEN_EXPIRE_TIME, TimeUnit.MILLISECONDS);
-
         return refreshToken;
     }
 
@@ -106,7 +100,6 @@ public class TokenProvider {
     // 토큰 기반으로 인증 정보 생성
     public Authentication getAuthentication(String token) {
         Claims claims = getClaims(token, true);
-
         Set<SimpleGrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
 
         return new UsernamePasswordAuthenticationToken(
@@ -128,13 +121,12 @@ public class TokenProvider {
         return Jwts.parser()
                 .setSigningKey(secretKey)
                 .build()
-                .parseSignedClaims(token)
+                .parseClaimsJws(token)
                 .getBody();
     }
 
     // Redis에서 RefreshToken 조회
     public String getRefreshTokenFromRedis(Long memberId) {
-        return redisService.getValue("RT:" + memberId); // RedisService 사용
+        return redisService.getValue("RT:" + memberId);
     }
-
 }
