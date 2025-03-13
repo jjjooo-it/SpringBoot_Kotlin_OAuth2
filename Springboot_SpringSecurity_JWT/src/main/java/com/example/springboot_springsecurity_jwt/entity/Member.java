@@ -4,7 +4,6 @@ import com.example.springboot_springsecurity_jwt.util.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "member")

@@ -12,27 +12,26 @@ import java.time.Duration;
 @Service
 public class TokenService {
 
-    // Redis 서버와 통신하기 위한 RedisTemplate 객체
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisService redisService;
 
     // 생성자를 통해 RedisTemplate 주입
-    public TokenService(RedisTemplate<String, String> redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    public TokenService(RedisService redisService) {
+        this.redisService = redisService;
     }
 
     // 리프레시 토큰을 Redis에 저장
     // 저장 기간은 7일로 설정
     public void saveRefreshToken(Long memberId, String refreshToken) {
-        redisTemplate.opsForValue().set("RT:" + memberId, refreshToken, Duration.ofDays(7));
+        redisService.saveValue("RT:" + memberId, refreshToken);
     }
 
     // Redis에서 리프레시 토큰 조회
     public String getRefreshToken(Long memberId) {
-        return redisTemplate.opsForValue().get("RT:" + memberId);
+        return redisService.getValue("RT:" + memberId);
     }
 
     // Redis에서 리프레시 토큰 삭제
     public void deleteRefreshToken(Long memberId) {
-        boolean status = redisTemplate.delete("RT:" + memberId);
+        redisService.deleteValue("RT:" + memberId);
     }
 }

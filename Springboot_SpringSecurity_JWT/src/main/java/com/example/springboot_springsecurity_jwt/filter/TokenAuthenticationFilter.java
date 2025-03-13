@@ -66,7 +66,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             Long memberId = e.getClaims().get("memberId", Long.class);
 
             // Redis에서 RefreshToken 조회
-            String refreshToken = tokenProvider.getRefreshTokenFromRedis(REFRESH_TOKEN_PREFIX + memberId);
+            String refreshToken = tokenProvider.getRefreshTokenFromRedis(Long.valueOf(REFRESH_TOKEN_PREFIX + memberId));
 
             // RefreshToken 유효성 확인 후 새로운 AccessToken 생성 및 설정
             if (tokenProvider.validateRefreshToken(refreshToken)) {

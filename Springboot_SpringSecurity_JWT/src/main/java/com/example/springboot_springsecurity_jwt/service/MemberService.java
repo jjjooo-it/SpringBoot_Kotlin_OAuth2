@@ -90,7 +90,7 @@ public class MemberService {
             throw new RuntimeException("회원 정보가 없습니다.");
         }
 
-        String refreshToken = tokenProvider.getRefreshTokenFromRedis(logoutRequestDTO.getEmail());
+        String refreshToken = tokenProvider.getRefreshTokenFromRedis(Long.valueOf(logoutRequestDTO.getEmail()));
         if (refreshToken != null) {
             tokenService.deleteRefreshToken(Long.valueOf(logoutRequestDTO.getEmail()));
         }

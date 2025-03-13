@@ -1,8 +1,8 @@
 package com.example.springboot_springsecurity_jwt.config;
 
-import com.example.springboot_springsecurity_jwt.repository.MemberRepository;
 import com.example.springboot_springsecurity_jwt.filter.TokenAuthenticationFilter;
 import com.example.springboot_springsecurity_jwt.util.TokenProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -18,13 +18,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  */
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class WebSecurityConfig {
     private final TokenProvider tokenProvider;
-
-    // 생성자 주입을 통해 TokenProvider 주입
-    public WebSecurityConfig(TokenProvider tokenProvider) {
-        this.tokenProvider = tokenProvider;
-    }
 
     // 비밀번호 암호화를 위한 PasswordEncoder 빈 등록
     // BCrypt 알고리즘 사용
@@ -54,9 +50,6 @@ public class WebSecurityConfig {
                         // 다음 엔드포인트는 인증 없이 접근 허용
                         .requestMatchers("/api/member/signup").permitAll()
                         .requestMatchers("/api/member/login").permitAll()
-                        .requestMatchers("/api/member/logout").permitAll()
-                        .requestMatchers("/api/member/token/refresh").permitAll()
-
                         // 그 외 모든 엔드포인트는 인증 필요
                         .anyRequest().authenticated()
                 )

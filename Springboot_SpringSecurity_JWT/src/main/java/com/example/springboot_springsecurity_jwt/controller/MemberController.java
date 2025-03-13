@@ -4,19 +4,14 @@ import com.example.springboot_springsecurity_jwt.dto.LoginRequestDTO;
 import com.example.springboot_springsecurity_jwt.dto.LogoutRequestDTO;
 import com.example.springboot_springsecurity_jwt.dto.SignupRequestDTO;
 import com.example.springboot_springsecurity_jwt.service.MemberService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/member")
+@RequiredArgsConstructor
 public class MemberController {
-
     private final MemberService memberService;
-
-    @Autowired
-    public MemberController(MemberService memberService) {
-        this.memberService = memberService;
-    }
 
     // 회원가입
     @PostMapping("/signup")
@@ -35,4 +30,8 @@ public class MemberController {
     public String logout(@RequestBody LogoutRequestDTO logoutRequestDTO) {
         return memberService.logout(logoutRequestDTO);
     }
+
+    // AT 갱신
+
+
 }
