@@ -19,12 +19,10 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * TokenService 클래스
- * Redis에 리프레시 토큰을 저장, 조회 및 삭제하는 기능 제공
- * JWT 토큰 생성 및 유효성 검증 처리
  * AccessToken 및 RefreshToken 생성
+ * JWT 토큰 생성 및 유효성 검증 처리
  * Redis를 사용한 RefreshToken 저장 및 조회
  */
-
 @Component
 @RequiredArgsConstructor
 public class TokenService {
@@ -45,7 +43,7 @@ public class TokenService {
     private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 10;
 
     // RefreshToken 만료 시간 (30일)
-    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24 * 30; // 30일
+    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24 * 30;
 
 
     // 공통 JWT 빌더 메서드
@@ -53,12 +51,14 @@ public class TokenService {
         Date now = new Date();
         Key key = Keys.hmacShaKeyFor(secretKey.getBytes());
         return Jwts.builder()
-                .setHeaderParam("typ", "JWT") // 토큰 타입
-                .setHeaderParam("alg", "HS512") // 시그니처 알고리즘
-                .setIssuer(issuer)
-                .setSubject(String.valueOf(memberId)) // 회원 ID
-                .setIssuedAt(now) // 발행일
-                .setExpiration(new Date(now.getTime() + expireTime)) // 만료일
+                .header()
+                .add("typ", "JWT")  // 토큰 타입
+                .add("alg", "HS512") // 시그니처 알고리즘
+                .and()
+                .issuer(issuer)
+                .subject(String.valueOf(memberId)) // 회원 ID
+                .issuedAt(now) // 발행일
+                .expiration(new Date(now.getTime() + expireTime)) // 만료일
                 .claim("id", memberId) // 회원 ID
                 .signWith(key)
                 .compact();
@@ -81,9 +81,9 @@ public class TokenService {
     public boolean validateAccessToken(String token) {
         try {
             Jwts.parser()
-                    .verifyWith(Keys.hmacShaKeyFor(accessSecretKey.getBytes())) // 서명 키 설정
+                    .verifyWith(Keys.hmacShaKeyFor(accessSecretKey.getBytes()))
                     .build()
-                    .parseClaimsJws(token); // 토큰 파싱
+                    .parse(token); // 토큰 파싱
             return true; // 유효한 토큰
         } catch (Exception e) {
             return false; // 유효하지 않은 토큰
@@ -96,7 +96,7 @@ public class TokenService {
             Jwts.parser()
                     .verifyWith(Keys.hmacShaKeyFor(refreshSecretKey.getBytes()))
                     .build()
-                    .parseClaimsJws(refreshToken);
+                    .parse(refreshToken);
             return true;
         } catch (Exception e) {
             return false;
@@ -113,12 +113,6 @@ public class TokenService {
                 token,
                 authorities
         );
-    }
-
-    // 토큰에서 memberId를 가져오는 메서드
-    public Long getMemberId(String token){
-        Claims claims = getClaims(token);
-        return claims.get("id", Long.class);
     }
 
     // 토큰에서 Claims 객체 추출

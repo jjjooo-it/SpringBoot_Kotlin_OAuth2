@@ -2,7 +2,6 @@ package com.example.springboot_springsecurity_jwt.config;
 
 import com.example.springboot_springsecurity_jwt.filter.TokenAuthenticationFilter;
 import com.example.springboot_springsecurity_jwt.service.TokenService;
-import com.example.springboot_springsecurity_jwt.util.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +20,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class WebSecurityConfig {
-    private final TokenProvider tokenProvider;
     private final TokenService tokenService;
 
     // 비밀번호 암호화를 위한 PasswordEncoder 빈 등록
@@ -34,7 +32,7 @@ public class WebSecurityConfig {
     // JWT 인증 필터 등록
     @Bean
     public TokenAuthenticationFilter tokenAuthenticationFilter() {
-        return new TokenAuthenticationFilter(tokenProvider, tokenService);
+        return new TokenAuthenticationFilter(tokenService);
     }
 
     // HTTP 보안 설정 정의
@@ -57,7 +55,7 @@ public class WebSecurityConfig {
                 )
 
                 // JWT 인증 필터를 UsernamePasswordAuthenticationFilter 앞에 추가
-                .addFilterBefore(new TokenAuthenticationFilter(tokenProvider,tokenService), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new TokenAuthenticationFilter(tokenService), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

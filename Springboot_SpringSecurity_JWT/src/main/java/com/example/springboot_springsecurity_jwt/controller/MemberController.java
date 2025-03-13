@@ -1,12 +1,16 @@
 package com.example.springboot_springsecurity_jwt.controller;
 
-import com.example.springboot_springsecurity_jwt.dto.LoginRequestDTO;
-import com.example.springboot_springsecurity_jwt.dto.LogoutRequestDTO;
-import com.example.springboot_springsecurity_jwt.dto.SignupRequestDTO;
+import com.example.springboot_springsecurity_jwt.dto.LoginRequest;
+import com.example.springboot_springsecurity_jwt.dto.LoginResponse;
+import com.example.springboot_springsecurity_jwt.dto.SignupRequest;
 import com.example.springboot_springsecurity_jwt.service.MemberService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
+@Slf4j
 @RestController
 @RequestMapping("/api/member")
 @RequiredArgsConstructor
@@ -15,23 +19,19 @@ public class MemberController {
 
     // 회원가입
     @PostMapping("/signup")
-    public String signup(@RequestBody SignupRequestDTO signupRequestDTO) {
-        return memberService.signup(signupRequestDTO);
+    public ResponseEntity<String> signup(@RequestBody SignupRequest signupRequest) {
+        return memberService.signup(signupRequest);
     }
 
     // 로그인
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequestDTO loginRequestDTO) {
-        return memberService.login(loginRequestDTO);
+    public LoginResponse login(@RequestBody LoginRequest loginRequest) {
+        return memberService.login(loginRequest);
     }
 
     // 로그아웃
     @PostMapping("/logout")
-    public String logout(@RequestBody LogoutRequestDTO logoutRequestDTO) {
-        return memberService.logout(logoutRequestDTO);
+    public ResponseEntity<String> logout() {
+        return memberService.logout();
     }
-
-    // AT 갱신
-
-
 }

@@ -45,6 +45,9 @@ dependencies {
 
     //jjwt 관련 의존성
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
 
     // QueryDSL 관련 의존성
     implementation 'com.querydsl:querydsl-apt:5.0.0'
