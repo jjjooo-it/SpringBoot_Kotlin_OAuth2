@@ -4,7 +4,6 @@ import com.example.springboot_springsecurity_jwt.dto.LoginRequestDTO;
 import com.example.springboot_springsecurity_jwt.dto.LogoutRequestDTO;
 import com.example.springboot_springsecurity_jwt.dto.SignupRequestDTO;
 import com.example.springboot_springsecurity_jwt.entity.Member;
-import com.example.springboot_springsecurity_jwt.util.TokenProvider;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.example.springboot_springsecurity_jwt.entity.QMember;
@@ -18,10 +17,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class MemberService {
     private final JPAQueryFactory queryFactory;
-    private final EntityManager entityManager;  // 추가
-    private final TokenProvider tokenProvider;
+    private final EntityManager entityManager;
     private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
+    private final RedisService redisService;
 
     // 이메일 중복 체크
     private BooleanExpression emailEq(String email) {
@@ -39,7 +38,7 @@ public class MemberService {
                 .where(emailEq(signupRequestDTO.getEmail()))
                 .fetchOne();
 
-        if (count != 0 && count > 0) {
+        if (count > 0) {
             throw new RuntimeException("이미 존재하는 이메일입니다.");
         }
 
@@ -73,8 +72,8 @@ public class MemberService {
             throw new RuntimeException("이메일 또는 비밀번호가 잘못되었습니다.");
         }
 
-        String accessToken = tokenProvider.makeAccessToken(foundMember.getId());
-        String refreshToken = tokenProvider.makeRefreshToken(foundMember.getId());
+        String accessToken = tokenService.makeAccessToken(foundMember.getId());
+        String refreshToken = tokenService.makeRefreshToken(foundMember.getId());
 
         return "로그인 성공, AccessToken: " + accessToken + ", RefreshToken: " + refreshToken;
     }
@@ -90,9 +89,9 @@ public class MemberService {
             throw new RuntimeException("회원 정보가 없습니다.");
         }
 
-        String refreshToken = tokenProvider.getRefreshTokenFromRedis(Long.valueOf(logoutRequestDTO.getEmail()));
+        String refreshToken = tokenService.getRefreshTokenFromRedis(Long.valueOf(logoutRequestDTO.getEmail()));
         if (refreshToken != null) {
-            tokenService.deleteRefreshToken(Long.valueOf(logoutRequestDTO.getEmail()));
+            redisService.deleteValue("RT:" + foundMember.getId());
         }
 
         return "로그아웃 되었습니다.";

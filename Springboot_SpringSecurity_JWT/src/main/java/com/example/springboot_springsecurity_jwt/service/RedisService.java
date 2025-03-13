@@ -15,18 +15,17 @@ import java.util.concurrent.TimeUnit;
 public class RedisService {
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public void saveValue(String key, String value) {
-        redisTemplate.opsForValue().set(key, value);
-    }
-
+    // Redis에 데이터를 저장 (만료 시간 설정)
     public void saveValue(String key, String value, long duration, TimeUnit timeUnit) {
         redisTemplate.opsForValue().set(key, value, duration, timeUnit);
     }
 
+    // Redis에서 데이터를 조회
     public String getValue(String key) {
         return (String) redisTemplate.opsForValue().get(key);
     }
 
+    // Redis에서 데이터를 삭제
     public void deleteValue(String key) {
         redisTemplate.delete(key);
     }
