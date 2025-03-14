@@ -7,11 +7,11 @@ import com.example.springboot_springsecurity_jwt.entity.Member;
 import com.example.springboot_springsecurity_jwt.repository.MemberRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.example.springboot_springsecurity_jwt.entity.QMember;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -78,36 +78,35 @@ public class MemberService {
         return new LoginResponse(accessToken, refreshToken);
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(MemberService.class);
-    // 로그아웃 로직 :: redis에 있는 RT 삭제
-    public ResponseEntity<String> logout() {
-        String memberIdString = SecurityContextHolder.getContext().getAuthentication().getName();
-        logger.info("로그아웃 시도: memberId = {}", memberIdString);  // 로그 찍기
+    // 로그아웃 로직 :: redis 에 있는 RT 삭제
+    public ResponseEntity<String> logout(HttpServletRequest request) {
+        String authorizationHeader = request.getHeader("Authorization");
 
-        Long memberId = Long.parseLong(memberIdString); // String을 Long으로 변환
-        logger.info("변환된 memberId: {}", memberId);  // 변환된 memberId 로그
+        // Bearer 제거 후 토큰 추출
+        String accessToken = authorizationHeader.substring(7);
+        if (!tokenService.validateAccessToken(accessToken)) {
+            return ResponseEntity.badRequest().body("유효하지 않은 AccessToken입니다.");
+        }
 
-        // 회원 조회
+        // AccessToken에서 memberId 추출
+        Object idValue = tokenService.getClaims(accessToken,true).get("id");
+        String memberId = String.valueOf(idValue);
+
         Member foundMember = queryFactory.selectFrom(member)
-                .where(member.memberId.eq(memberId))
+                .where(member.memberId.eq(Long.parseLong(memberId)))
                 .fetchOne();
 
         if (foundMember == null) {
-            logger.error("회원 정보가 없습니다. memberId: {}", memberId);  // 에러 로그
             throw new RuntimeException("회원 정보가 없습니다.");
         }
 
-        // Redis에서 refresh token 가져오기
         String refreshToken = tokenService.getRefreshTokenFromRedis(foundMember.getMemberId());
         if (refreshToken != null) {
-            logger.info("리프레시 토큰이 존재합니다. 삭제 시도: memberId = {}", memberId);  // 리프레시 토큰 존재시 로그
-            // Redis에서 refresh token 삭제
             redisService.deleteValue("RT:" + foundMember.getMemberId());
-            logger.info("리프레시 토큰 삭제 성공: memberId = {}", memberId);  // 삭제 성공 로그
             return ResponseEntity.ok("로그아웃 성공");
         } else {
-            logger.warn("리프레시 토큰이 존재하지 않습니다. memberId = {}", memberId);  // 경고 로그
             return ResponseEntity.badRequest().body("리프레시 토큰이 존재하지 않습니다.");
         }
     }
+
 }

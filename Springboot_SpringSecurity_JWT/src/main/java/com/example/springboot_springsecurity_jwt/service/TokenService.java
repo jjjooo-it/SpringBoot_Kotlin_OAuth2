@@ -103,9 +103,19 @@ public class TokenService {
         }
     }
 
+    // 토큰에서 Claims 객체 추출
+    public Claims getClaims(String token, boolean isAccessToken) {
+        String secretKey = isAccessToken ? accessSecretKey : refreshSecretKey;
+        return Jwts.parser()
+                .setSigningKey(Keys.hmacShaKeyFor(secretKey.getBytes()))
+                .build()
+                .parseSignedClaims(token)
+                .getBody();
+    }
+
     // 토큰 기반으로 인증 정보 생성
     public Authentication getAuthentication(String token) {
-        Claims claims = getClaims(token); // AT의 Claims 정보 추출
+        Claims claims = getClaims(token, true); // AccessToken이므로 true
         Set<SimpleGrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
 
         return new UsernamePasswordAuthenticationToken(
@@ -113,15 +123,6 @@ public class TokenService {
                 token,
                 authorities
         );
-    }
-
-    // 토큰에서 Claims 객체 추출
-    public Claims getClaims(String token) {
-        return Jwts.parser()
-                .setSigningKey(Keys.hmacShaKeyFor(refreshSecretKey.getBytes()))
-                .build()
-                .parseSignedClaims(token)
-                .getBody();
     }
 
     // Redis에서 RefreshToken 조회

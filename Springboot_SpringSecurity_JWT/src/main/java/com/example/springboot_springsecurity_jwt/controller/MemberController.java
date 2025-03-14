@@ -4,6 +4,7 @@ import com.example.springboot_springsecurity_jwt.dto.LoginRequest;
 import com.example.springboot_springsecurity_jwt.dto.LoginResponse;
 import com.example.springboot_springsecurity_jwt.dto.SignupRequest;
 import com.example.springboot_springsecurity_jwt.service.MemberService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +32,7 @@ public class MemberController {
 
     // 로그아웃
     @PostMapping("/logout")
-    public ResponseEntity<String> logout() {
-        return memberService.logout();
+    public ResponseEntity<String> logout(HttpServletRequest request) {
+        return memberService.logout(request);
     }
 }
