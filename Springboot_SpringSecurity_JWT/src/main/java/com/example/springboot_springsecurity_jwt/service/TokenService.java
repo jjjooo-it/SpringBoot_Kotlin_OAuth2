@@ -114,14 +114,16 @@ public class TokenService {
     }
 
     // 토큰 기반으로 인증 정보 생성
+    // AccessToken을 사용하여 인증 객체를 만들고, 이를 Spring Security의 인증 시스템에서 사용할 수 있도록 반환
     public Authentication getAuthentication(String token) {
         Claims claims = getClaims(token, true); // AccessToken이므로 true
-        Set<SimpleGrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
+        Set<SimpleGrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")); // 역할 부여
 
+        // UsernamePasswordAuthenticationToken은 Spring Security의 인증 객체
         return new UsernamePasswordAuthenticationToken(
-                new org.springframework.security.core.userdetails.User(claims.getSubject(), "", authorities),
-                token,
-                authorities
+                new org.springframework.security.core.userdetails.User(claims.getSubject(), "", authorities), // 사용자 정보와 역할 설정
+                token,  // JWT 토큰 자체를 인증 정보로 포함
+                authorities  // 사용자 권한 정보
         );
     }
 
